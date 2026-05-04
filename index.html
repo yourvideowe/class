@@ -47,10 +47,10 @@ body{font-family:'Noto Sans TC',sans-serif;background:#E8E2D8;margin:0;min-heigh
 .role-general{background:var(--bluem);color:var(--blue);}
 .role-teacher{background:#FDEEE6;color:var(--o);}
 .lock-desc{font-size:13px;color:var(--tmu);line-height:1.8;margin-bottom:1.5rem;}
-.pw-wrap{display:flex;gap:.5rem;max-width:320px;margin:0 auto;}
-.pw-input{border:1.5px solid var(--line);border-radius:10px;padding:.8rem 1rem;font-size:16px;font-family:'Noto Sans TC',sans-serif;color:var(--td);outline:none;flex:1;background:var(--cr);letter-spacing:.2em;text-align:center;}
+.pw-wrap{display:flex;gap:.5rem;width:100%;max-width:300px;margin:0 auto;padding:0 .5rem;}
+.pw-input{border:1.5px solid var(--line);border-radius:10px;padding:.8rem .75rem;font-size:16px;font-family:'Noto Sans TC',sans-serif;color:var(--td);outline:none;flex:1;min-width:0;background:var(--cr);letter-spacing:.1em;text-align:center;}
 .pw-input:focus{border-color:var(--o);}
-.pw-btn{background:var(--o);color:#fff;border:none;border-radius:10px;padding:.8rem 1.25rem;font-size:15px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;white-space:nowrap;}
+.pw-btn{background:var(--o);color:#fff;border:none;border-radius:10px;padding:.8rem 1rem;font-size:14px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 .pw-error{font-size:12px;color:#C05050;margin-top:.6rem;min-height:20px;}
 
 /* ── HEADERS ── */
@@ -240,6 +240,29 @@ body{font-family:'Noto Sans TC',sans-serif;background:#E8E2D8;margin:0;min-heigh
 .ws-opt.selected{border-color:var(--o);color:var(--o);background:#FFF8F4;}
 .ws-reflect{background:var(--crm);border-radius:10px;padding:.85rem 1rem;}
 .ws-rq{font-size:13px;color:var(--tm);margin-bottom:.5rem;font-weight:500;}
+
+/* ── WORKSHEET ACTIONS ── */
+.ws-actions{display:flex;flex-direction:column;gap:.75rem;margin-top:1.25rem;}
+.ws-btn{width:100%;border:none;border-radius:12px;padding:1rem;font-size:15px;font-family:'Noto Sans TC',sans-serif;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:opacity .15s;}
+.ws-btn:active{opacity:.8;}
+.ws-btn-submit{background:var(--o);color:#fff;}
+.ws-btn-pdf{background:var(--td);color:#fff;}
+.ws-btn-note{font-size:11px;color:var(--tmu);text-align:center;line-height:1.6;}
+.ws-submit-result{font-size:13px;text-align:center;padding:.75rem;border-radius:8px;margin-top:.5rem;display:none;}
+.ws-submit-ok{background:var(--sgm);color:var(--sg);}
+.ws-submit-err{background:#FFF4F4;color:#C05050;}
+
+/* ── PRINT STYLES ── */
+@media print{
+  .topbar,.bottom-nav,.ws-actions,.ws-btn-note,.ws-submit-result{display:none!important;}
+  body{background:#fff;padding:0;}
+  .main{padding:.5rem;}
+  #s_brand{display:block!important;}
+  .section:not(#s_brand){display:none!important;}
+  .worksheet{border:1px solid #ccc;padding:1rem;}
+  .ws-kw.selected{background:var(--o);color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .ws-opt.selected{border-color:var(--o);color:var(--o);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
 </style>
 
 <script>
@@ -307,6 +330,78 @@ function handleEnter(e,role){if(e.key==='Enter')tryUnlock(role);}
 document.addEventListener('click',function(e){
   if(e.target.classList.contains('ws-opt')) e.target.classList.toggle('selected');
 });
+
+/* ── Google Sheets API ── */
+// 部署後請將下方 YOUR_APPS_SCRIPT_URL 換成你的 Google Apps Script 網址
+const SHEET_API_URL = 'YOUR_APPS_SCRIPT_URL';
+
+function getFormData() {
+  const val = id => (document.getElementById(id)||{}).value || '';
+  const selected = cls => [...document.querySelectorAll('.'+cls+'.selected')].map(e=>e.textContent).join('、') || '';
+  return {
+    姓名: val('ws_name'),
+    品牌名稱: val('ws_brand_name'),
+    A1_專業擅長: val('ws_a1'),
+    A2_服務對象: val('ws_a2'),
+    A3_解決問題: val('ws_a3'),
+    A4_角色: val('ws_a4'),
+    B1_中心信念: val('ws_b1'),
+    B2_核心原因: val('ws_b2'),
+    C1_品牌關鍵字: selected('ws-kw'),
+    C2_說話方式: selected('ws-style'),
+    D1_顏色感覺: selected('ws-color'),
+    D2_畫面感覺: selected('ws-vibe'),
+    D3_欣賞帳號: [val('ws_d3a'),val('ws_d3b'),val('ws_d3c')].filter(Boolean).join('、'),
+    E1_理想日常: val('ws_e1'),
+    E2_維持時長: val('ws_e2'),
+    F1_自我評估: selected('ws-f1'),
+    F2_滿意度: selected('ws-f2'),
+  };
+}
+
+async function submitForm() {
+  const btn = document.getElementById('btn_submit');
+  const result = document.getElementById('submit_result');
+  const data = getFormData();
+
+  if (!data.姓名.trim()) {
+    result.textContent = '請先填寫你的名字再送出！';
+    result.className = 'ws-submit-result ws-submit-err';
+    result.style.display = 'block';
+    return;
+  }
+
+  btn.textContent = '送出中…';
+  btn.disabled = true;
+
+  try {
+    if (SHEET_API_URL === 'YOUR_APPS_SCRIPT_URL') {
+      // 還沒設定 API，模擬送出
+      await new Promise(r => setTimeout(r, 800));
+      result.textContent = '✓ 已模擬送出！（請設定 Google Sheets API 後才會實際收到資料）';
+      result.className = 'ws-submit-result ws-submit-ok';
+    } else {
+      await fetch(SHEET_API_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({...data, 時間戳記: new Date().toLocaleString('zh-TW')})
+      });
+      result.textContent = '✓ 資料已送出！老師會收到你的品牌 DNA。';
+      result.className = 'ws-submit-result ws-submit-ok';
+    }
+  } catch(e) {
+    result.textContent = '送出失敗，請截圖或稍後再試。';
+    result.className = 'ws-submit-result ws-submit-err';
+  }
+
+  result.style.display = 'block';
+  btn.textContent = '✓ 已送出';
+}
+
+function downloadPDF() {
+  window.print();
+}
 </script>
 </head>
 <body>
@@ -452,8 +547,9 @@ document.addEventListener('click',function(e){
     <div class="sch-row"><div class="sch-time">0:00</div><div class="sch-content"><div class="sch-main"><span class="tag tag-br" style="margin-right:4px;font-size:9.5px;">開場</span>課程說明與暖場</div></div><div class="sch-dur">10分</div></div>
     <div class="sch-row"><div class="sch-time">0:10</div><div class="sch-content"><div class="sch-main"><span class="tag tag-or" style="margin-right:4px;font-size:9.5px;">社群篇</span>社群的邏輯與基礎</div><div class="sch-sub">本質・功能・演算法・AI 時代</div></div><div class="sch-dur">50分</div></div>
     <div class="sch-row"><div class="sch-time">1:00</div><div class="sch-content"><div class="sch-main"><span class="tag tag-br" style="margin-right:4px;font-size:9.5px;">休息</span>中場休息</div></div><div class="sch-dur">10分</div></div>
-    <div class="sch-row"><div class="sch-time">1:10</div><div class="sch-content"><div class="sch-main"><span class="tag tag-bl" style="margin-right:4px;font-size:9.5px;">品牌篇</span>品牌的原理與建構</div><div class="sch-sub">品牌原理・範例拆解・形成過程</div></div><div class="sch-dur">55分</div></div>
-    <div class="sch-row"><div class="sch-time">2:05</div><div class="sch-content"><div class="sch-main"><span class="tag tag-gr" style="margin-right:4px;font-size:9.5px;">作業</span>品牌 DNA 工作表填寫</div></div><div class="sch-dur">30分</div></div>
+    <div class="sch-row"><div class="sch-time">1:10</div><div class="sch-content"><div class="sch-main"><span class="tag tag-bl" style="margin-right:4px;font-size:9.5px;">品牌篇</span>品牌的原理與建構</div><div class="sch-sub">品牌原理・範例拆解・形成過程</div></div><div class="sch-dur">35分</div></div>
+    <div class="sch-row"><div class="sch-time">1:45</div><div class="sch-content"><div class="sch-main"><span class="tag tag-or" style="margin-right:4px;font-size:9.5px;">互動</span>找三張圖片・跟大家分享</div><div class="sch-sub">從手機或網路找圖，說說為什麼是這三張</div></div><div class="sch-dur">20分</div></div>
+    <div class="sch-row"><div class="sch-time">2:05</div><div class="sch-content"><div class="sch-main"><span class="tag tag-gr" style="margin-right:4px;font-size:9.5px;">作業</span>品牌 DNA 工作表填寫</div><div class="sch-sub">回家作業・5 分鐘完成</div></div><div class="sch-dur">5分</div></div>
     <div class="sch-row"><div class="sch-time">2:35</div><div class="sch-content"><div class="sch-main"><span class="tag tag-br" style="margin-right:4px;font-size:9.5px;">收尾</span>學員分享與課堂總結</div></div><div class="sch-dur">15分</div></div>
   </div>
   <div class="card accent">
@@ -547,43 +643,124 @@ document.addEventListener('click',function(e){
   <div class="card" style="border-left:3px solid var(--o);"><div class="ctext">個人品牌不是「設計出來的」，而是「挖掘出來的」。品牌建立的過程，是把你已有的東西整理清楚，讓別人也能看見。</div></div>
   <div class="process-steps"><div class="ps-item"><div class="ps-num">01</div><div class="ps-title">找到中心思想</div><div class="ps-desc">你最在意什麼？你做這件事的核心理由是什麼？</div></div><div class="ps-item"><div class="ps-num">02</div><div class="ps-title">觀察做事方式</div><div class="ps-desc">你習慣怎麼處理問題？你特別在乎哪些細節？</div></div><div class="ps-item"><div class="ps-num">03</div><div class="ps-title">定義美學偏好</div><div class="ps-desc">你喜歡什麼樣的顏色、氛圍、節奏感？</div></div><div class="ps-item"><div class="ps-num">04</div><div class="ps-title">描繪理想生活</div><div class="ps-desc">你想過什麼樣的日常？這個品牌要帶你去哪？</div></div></div>
   <div class="divider"></div>
-  <div class="sec-label">3・建構你的品牌 DNA</div>
+
+  <!-- 課堂互動 -->
+  <div class="sec-label">3・課堂互動</div>
+  <div style="background:var(--td);border-radius:14px;padding:1.5rem;margin-bottom:.75rem;position:relative;overflow:hidden;">
+    <div style="position:absolute;right:-15px;top:-15px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.04);"></div>
+    <div style="font-size:10px;letter-spacing:.12em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:.6rem;">課堂活動・約 20 分鐘</div>
+    <div style="font-family:'Noto Serif TC',serif;font-size:18px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:.75rem;">找三張圖片<br>跟大家說說為什麼</div>
+    <div style="font-size:12.5px;color:rgba(255,255,255,.8);line-height:1.8;">從你的手機相簿或網路上，找出<strong style="color:#fff;">三張讓你有感覺的圖片</strong>，任何圖都可以。</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:.75rem;">
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--line);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;">
+      <div style="font-size:28px;">🖼</div>
+      <div style="font-size:11px;color:var(--tmu);font-weight:500;">圖片 1</div>
+    </div>
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--line);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;">
+      <div style="font-size:28px;">🖼</div>
+      <div style="font-size:11px;color:var(--tmu);font-weight:500;">圖片 2</div>
+    </div>
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--line);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;">
+      <div style="font-size:28px;">🖼</div>
+      <div style="font-size:11px;color:var(--tmu);font-weight:500;">圖片 3</div>
+    </div>
+  </div>
+
+  <div style="background:#fff;border-radius:12px;border:1px solid var(--line);padding:1rem;margin-bottom:.75rem;">
+    <div style="font-size:12px;font-weight:500;color:var(--td);margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem;"><span style="width:8px;height:8px;border-radius:2px;background:var(--o);display:inline-block;flex-shrink:0;"></span>怎麼找圖？</div>
+    <div style="display:flex;flex-direction:column;gap:.6rem;">
+      <div style="display:flex;gap:.75rem;align-items:flex-start;">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--crm);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">📱</div>
+        <div><div style="font-size:12.5px;font-weight:500;color:var(--td);margin-bottom:2px;">從手機相簿找</div><div style="font-size:11.5px;color:var(--tmu);line-height:1.6;">打開你的相簿，找那些你收藏過、或是讓你停下來看的照片</div></div>
+      </div>
+      <div style="display:flex;gap:.75rem;align-items:flex-start;">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--crm);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">🔍</div>
+        <div><div style="font-size:12.5px;font-weight:500;color:var(--td);margin-bottom:2px;">從網路搜尋找</div><div style="font-size:11.5px;color:var(--tmu);line-height:1.6;">Google 圖片、Pinterest、Instagram，搜尋任何有感覺的關鍵字</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#fff;border-radius:12px;border:1px solid var(--line);padding:1rem;margin-bottom:.75rem;">
+    <div style="font-size:12px;font-weight:500;color:var(--td);margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem;"><span style="width:8px;height:8px;border-radius:2px;background:var(--o);display:inline-block;flex-shrink:0;"></span>分享的時候說什麼？</div>
+    <div style="display:flex;flex-direction:column;gap:.5rem;">
+      <div style="display:flex;gap:.6rem;align-items:flex-start;font-size:12.5px;color:var(--tm);line-height:1.65;">
+        <div style="width:20px;height:20px;border-radius:50%;background:var(--crm);color:var(--ob);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
+        <div>這張圖讓你有什麼感覺？為什麼你會選它？</div>
+      </div>
+      <div style="display:flex;gap:.6rem;align-items:flex-start;font-size:12.5px;color:var(--tm);line-height:1.65;">
+        <div style="width:20px;height:20px;border-radius:50%;background:var(--crm);color:var(--ob);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</div>
+        <div>這張圖跟你有什麼關係？它代表你的什麼？</div>
+      </div>
+      <div style="display:flex;gap:.6rem;align-items:flex-start;font-size:12.5px;color:var(--tm);line-height:1.65;">
+        <div style="width:20px;height:20px;border-radius:50%;background:var(--crm);color:var(--ob);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
+        <div>如果這三張圖合在一起，它們說的是什麼？</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#FFF8F4;border:1px solid rgba(200,90,30,.15);border-radius:10px;padding:1rem;margin-bottom:1.25rem;">
+    <div style="font-size:10px;letter-spacing:.1em;color:var(--o);font-weight:500;text-transform:uppercase;margin-bottom:.4rem;">為什麼要做這個活動</div>
+    <div style="font-size:12.5px;color:var(--tm);line-height:1.85;">圖片不會說謊。你選的圖往往比你說的話更直接地透露你是誰、你嚮往什麼。這個活動幫助你找到品牌 DNA 的線索，讓接下來的工作表填起來更有感。</div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="sec-label">4・回家作業・建構你的品牌 DNA</div>
+  <div style="background:var(--crm);border-radius:10px;padding:.85rem 1rem;margin-bottom:.85rem;font-size:12.5px;color:var(--tm);line-height:1.75;">
+    課堂互動結束後，花 <strong>5 分鐘</strong> 完成下面這份工作表。把剛才分享圖片時的感受，轉化成文字留下來。
+  </div>
   <div class="worksheet">
     <div class="ws-header"><div class="ws-title">品牌 DNA 工作表</div><div class="ws-sub">請依照自己的真實想法填寫，沒有標準答案</div></div>
+
+    <!-- 基本資料 -->
+    <div class="ws-section"><div class="ws-stitle">基本資料</div>
+      <div class="ws-field"><div class="ws-label">我的名字</div><input id="ws_name" class="ws-input" type="text" placeholder="請輸入你的名字"></div>
+      <div class="ws-field"><div class="ws-label">我所在的品牌</div><input id="ws_brand_name" class="ws-input" type="text" placeholder="請輸入品牌或公司名稱"></div>
+    </div>
+
     <div class="ws-section"><div class="ws-stitle">A・核心定位</div>
-      <div class="ws-field"><div class="ws-label">我的專業／我最擅長的事</div><input class="ws-input" type="text" placeholder="例：幫客戶找到最適合的健身方式"></div>
-      <div class="ws-field"><div class="ws-label">我主要服務的對象是</div><input class="ws-input" type="text" placeholder="例：30-45歲想改善體態的上班族"></div>
-      <div class="ws-field"><div class="ws-label">我能幫他們解決什麼問題</div><input class="ws-input" type="text" placeholder="例：不知道從哪開始、沒有時間運動"></div>
-      <div class="ws-field"><div class="ws-label">我的角色是</div><input class="ws-input" type="text" placeholder="記錄者／教練／陪伴者…"></div>
+      <div class="ws-field"><div class="ws-label">我的專業／我最擅長的事</div><input id="ws_a1" class="ws-input" type="text" placeholder="例：幫客戶找到最適合的健身方式"></div>
+      <div class="ws-field"><div class="ws-label">我主要服務的對象是</div><input id="ws_a2" class="ws-input" type="text" placeholder="例：30-45歲想改善體態的上班族"></div>
+      <div class="ws-field"><div class="ws-label">我能幫他們解決什麼問題</div><input id="ws_a3" class="ws-input" type="text" placeholder="例：不知道從哪開始、沒有時間運動"></div>
+      <div class="ws-field"><div class="ws-label">我的角色是</div><input id="ws_a4" class="ws-input" type="text" placeholder="記錄者／教練／陪伴者…"></div>
     </div>
     <div class="ws-section"><div class="ws-stitle">B・中心思想</div>
-      <div class="ws-field"><div class="ws-label">如果你的品牌只能傳遞一個信念，它是什麼？</div><textarea class="ws-textarea" placeholder="例：每個人都有適合自己的方式，不需要跟別人比。"></textarea></div>
-      <div class="ws-field"><div class="ws-label">你做這件事最核心的原因</div><textarea class="ws-textarea" placeholder="例：我希望讓更多人知道，專業不需要讓人感到有距離感。"></textarea></div>
+      <div class="ws-field"><div class="ws-label">如果你的品牌只能傳遞一個信念，它是什麼？</div><textarea id="ws_b1" class="ws-textarea" placeholder="例：每個人都有適合自己的方式，不需要跟別人比。"></textarea></div>
+      <div class="ws-field"><div class="ws-label">你做這件事最核心的原因</div><textarea id="ws_b2" class="ws-textarea" placeholder="例：我希望讓更多人知道，專業不需要讓人感到有距離感。"></textarea></div>
     </div>
     <div class="ws-section"><div class="ws-stitle">C・品牌個性</div>
       <div class="ws-field"><div class="ws-label">選出 3–5 個最符合你品牌個性的關鍵字</div><div class="ws-keywords"><span class="ws-kw" onclick="this.classList.toggle('selected')">親切</span><span class="ws-kw" onclick="this.classList.toggle('selected')">真實</span><span class="ws-kw" onclick="this.classList.toggle('selected')">專業</span><span class="ws-kw" onclick="this.classList.toggle('selected')">幽默</span><span class="ws-kw" onclick="this.classList.toggle('selected')">溫暖</span><span class="ws-kw" onclick="this.classList.toggle('selected')">直接</span><span class="ws-kw" onclick="this.classList.toggle('selected')">細膩</span><span class="ws-kw" onclick="this.classList.toggle('selected')">自然</span><span class="ws-kw" onclick="this.classList.toggle('selected')">有深度</span><span class="ws-kw" onclick="this.classList.toggle('selected')">輕鬆</span><span class="ws-kw" onclick="this.classList.toggle('selected')">嚴謹</span><span class="ws-kw" onclick="this.classList.toggle('selected')">有趣</span><span class="ws-kw" onclick="this.classList.toggle('selected')">簡潔</span><span class="ws-kw" onclick="this.classList.toggle('selected')">感性</span><span class="ws-kw" onclick="this.classList.toggle('selected')">理性</span></div></div>
-      <div class="ws-field"><div class="ws-label">你的品牌說話的方式比較像…</div><div class="ws-opts"><div class="ws-opt">像朋友聊天</div><div class="ws-opt">像老師解說</div><div class="ws-opt">像顧問建議</div><div class="ws-opt">像創作者表達</div><div class="ws-opt">像記者報導</div></div></div>
+      <div class="ws-field"><div class="ws-label">你的品牌說話的方式比較像…</div><div class="ws-opts"><div class="ws-opt ws-style">像朋友聊天</div><div class="ws-opt ws-style">像老師解說</div><div class="ws-opt ws-style">像顧問建議</div><div class="ws-opt ws-style">像創作者表達</div><div class="ws-opt ws-style">像記者報導</div></div></div>
     </div>
     <div class="ws-section"><div class="ws-stitle">D・視覺與美學偏好</div>
-      <div class="ws-field"><div class="ws-label">你喜歡的顏色感覺</div><div class="ws-opts"><div class="ws-opt">暖色系</div><div class="ws-opt">冷色系</div><div class="ws-opt">中性色</div><div class="ws-opt">大地色</div><div class="ws-opt">鮮豔活潑</div></div></div>
-      <div class="ws-field"><div class="ws-label">你希望畫面給人的感覺</div><div class="ws-opts"><div class="ws-opt">乾淨簡潔</div><div class="ws-opt">有溫度</div><div class="ws-opt">專業俐落</div><div class="ws-opt">自然真實</div><div class="ws-opt">有質感</div></div></div>
+      <div class="ws-field"><div class="ws-label">你喜歡的顏色感覺</div><div class="ws-opts"><div class="ws-opt ws-color">暖色系</div><div class="ws-opt ws-color">冷色系</div><div class="ws-opt ws-color">中性色</div><div class="ws-opt ws-color">大地色</div><div class="ws-opt ws-color">鮮豔活潑</div></div></div>
+      <div class="ws-field"><div class="ws-label">你希望畫面給人的感覺</div><div class="ws-opts"><div class="ws-opt ws-vibe">乾淨簡潔</div><div class="ws-opt ws-vibe">有溫度</div><div class="ws-opt ws-vibe">專業俐落</div><div class="ws-opt ws-vibe">自然真實</div><div class="ws-opt ws-vibe">有質感</div></div></div>
       <div class="ws-field"><div class="ws-label">3 個你欣賞的帳號或品牌</div>
-        <input class="ws-input" type="text" placeholder="1." style="margin-bottom:.5rem">
-        <input class="ws-input" type="text" placeholder="2." style="margin-bottom:.5rem">
-        <input class="ws-input" type="text" placeholder="3.">
+        <input id="ws_d3a" class="ws-input" type="text" placeholder="1." style="margin-bottom:.5rem">
+        <input id="ws_d3b" class="ws-input" type="text" placeholder="2." style="margin-bottom:.5rem">
+        <input id="ws_d3c" class="ws-input" type="text" placeholder="3.">
       </div>
     </div>
     <div class="ws-section"><div class="ws-stitle">E・理想生活模式</div>
-      <div class="ws-field"><div class="ws-label">這個品牌成功後，你的日常是什麼樣子？</div><textarea class="ws-textarea" placeholder="例：每週拍一次影片，在固定的空間工作…"></textarea></div>
-      <div class="ws-field"><div class="ws-label">你願意維持這個品牌配套多久？為什麼？</div><textarea class="ws-textarea" placeholder="例：至少兩年，因為我相信這個方向…"></textarea></div>
+      <div class="ws-field"><div class="ws-label">這個品牌成功後，你的日常是什麼樣子？</div><textarea id="ws_e1" class="ws-textarea" placeholder="例：每週拍一次影片，在固定的空間工作…"></textarea></div>
+      <div class="ws-field"><div class="ws-label">你願意維持這個品牌配套多久？為什麼？</div><textarea id="ws_e2" class="ws-textarea" placeholder="例：至少兩年，因為我相信這個方向…"></textarea></div>
     </div>
     <div class="ws-section" style="margin-bottom:0;"><div class="ws-stitle">F・完成後的自我對話</div>
       <div class="ws-reflect">
         <div class="ws-rq">看完自己填的內容，你覺得…</div>
-        <div class="ws-opts"><div class="ws-opt">這就是我，很準確</div><div class="ws-opt">有些地方還需要想清楚</div><div class="ws-opt">需要更多時間觀察自己</div><div class="ws-opt">比我想像的清晰</div></div>
+        <div class="ws-opts"><div class="ws-opt ws-f1">這就是我，很準確</div><div class="ws-opt ws-f1">有些地方還需要想清楚</div><div class="ws-opt ws-f1">需要更多時間觀察自己</div><div class="ws-opt ws-f1">比我想像的清晰</div></div>
         <div class="ws-rq" style="margin-top:.85rem;">你對這份 DNA 配套的滿意度是…</div>
-        <div class="ws-opts"><div class="ws-opt">很滿意，可以開始了</div><div class="ws-opt">還不確定，需要討論</div><div class="ws-opt">需要再修改幾個地方</div><div class="ws-opt">有點迷惘，想聽老師說明</div></div>
+        <div class="ws-opts"><div class="ws-opt ws-f2">很滿意，可以開始了</div><div class="ws-opt ws-f2">還不確定，需要討論</div><div class="ws-opt ws-f2">需要再修改幾個地方</div><div class="ws-opt ws-f2">有點迷惘，想聽老師說明</div></div>
       </div>
+    </div>
+
+    <!-- 送出 & 下載 -->
+    <div class="ws-actions">
+      <button id="btn_submit" class="ws-btn ws-btn-submit" onclick="submitForm()">📤 送出我的品牌 DNA</button>
+      <div id="submit_result" class="ws-submit-result"></div>
+      <button class="ws-btn ws-btn-pdf" onclick="downloadPDF()">📄 下載成 PDF</button>
+      <div class="ws-btn-note">下載 PDF：點擊後選擇「儲存為 PDF」即可保存你的品牌 DNA 表單</div>
     </div>
   </div>
   <div class="foot">社群影音課程 2026・Class 1 講義・品牌篇（含 DNA 工作表）</div>
