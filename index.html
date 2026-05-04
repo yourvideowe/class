@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>社群影音課程 2026・集團內訓提案</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --o:#C85A1E;--ob:#8B4A25;--cr:#F5F0E8;--crm:#EDE7D8;
+  --td:#2C2218;--tm:#5A4535;--tmu:#9A8070;
+  --sg:#6B7F70;--sgm:#E8EFE9;
+  --blue:#3D5A8A;--bluem:#E6EBF5;
+}
+body{background:#e8e2d8;display:flex;justify-content:center;padding:2rem 1rem;min-height:100vh;}
+.wrap{background:var(--cr);padding:2.5rem 1.75rem;font-family:'Noto Sans TC',sans-serif;max-width:780px;width:100%;border-radius:16px;}
+
+.header{background:var(--o);border-radius:14px;padding:1.75rem 2rem;margin-bottom:2rem;position:relative;overflow:hidden;}
+.header::after{content:'';position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06);}
+.header::before{content:'';position:absolute;right:60px;bottom:-40px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.04);}
+.header-tag{display:inline-block;background:rgba(255,255,255,.2);color:#fff;font-size:10px;padding:3px 10px;border-radius:10px;letter-spacing:.1em;margin-bottom:10px;}
+.header-title{font-family:'Noto Serif TC',serif;font-size:20px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:6px;}
+.header-sub{font-size:12px;color:rgba(255,255,255,.8);line-height:1.8;}
+
+.purpose{background:#fff;border-radius:12px;border:1px solid rgba(180,150,120,.18);padding:1.1rem 1.4rem;margin-bottom:1.75rem;}
+.purpose-label{font-size:10px;letter-spacing:.15em;color:var(--ob);font-weight:500;text-transform:uppercase;margin-bottom:6px;}
+.purpose-text{font-size:12.5px;color:var(--tm);line-height:1.9;}
+
+.overview{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.75rem;}
+.ov-card{background:#fff;border-radius:10px;border:1px solid rgba(180,150,120,.15);padding:.9rem 1rem;text-align:center;}
+.ov-num{font-family:'Noto Serif TC',serif;font-size:22px;font-weight:700;color:var(--o);line-height:1;}
+.ov-label{font-size:10.5px;color:var(--tmu);margin-top:4px;}
+
+.sec-label{font-size:10.5px;letter-spacing:.15em;color:var(--ob);font-weight:500;text-transform:uppercase;margin-bottom:.85rem;}
+
+.class-card{background:#fff;border-radius:14px;border:1px solid rgba(180,150,120,.15);margin-bottom:1.1rem;overflow:hidden;}
+.class-header{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;border-bottom:.5px solid rgba(180,150,120,.12);}
+.class-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-size:13px;font-weight:700;flex-shrink:0;}
+.c1 .class-num{background:var(--crm);color:var(--ob);}
+.c2 .class-num{background:var(--sgm);color:var(--sg);}
+.c3 .class-num{background:var(--bluem);color:var(--blue);}
+.class-title{font-family:'Noto Serif TC',serif;font-size:15px;font-weight:600;color:var(--td);}
+.class-desc{font-size:11px;color:var(--tmu);margin-top:2px;line-height:1.5;}
+.class-tag{margin-left:auto;font-size:10px;padding:2px 9px;border-radius:10px;font-weight:500;white-space:nowrap;}
+.c1 .class-tag{background:var(--crm);color:var(--ob);}
+.c2 .class-tag{background:var(--sgm);color:var(--sg);}
+.c3 .class-tag{background:var(--bluem);color:var(--blue);}
+
+.class-body{padding:1rem 1.25rem;}
+.topics-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;}
+.topic-block{background:var(--cr);border-radius:8px;padding:.75rem .9rem;}
+.topic-title{font-size:12px;font-weight:500;color:var(--td);margin-bottom:5px;}
+.topic-items{list-style:none;}
+.topic-item{display:flex;gap:6px;font-size:11px;color:var(--tm);line-height:1.65;margin-bottom:2px;align-items:flex-start;}
+.dot{flex-shrink:0;width:3px;height:3px;border-radius:50%;background:var(--o);margin-top:6px;}
+
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.hw-block,.eval-block{border-radius:8px;padding:.75rem .9rem;}
+.hw-block{background:#FFF8F4;border:.5px solid rgba(200,90,30,.15);}
+.eval-block{background:#F4F7F4;border:.5px solid rgba(107,127,112,.2);}
+.block-label{font-size:10px;letter-spacing:.1em;font-weight:500;text-transform:uppercase;margin-bottom:5px;}
+.hw-block .block-label{color:var(--o);}
+.eval-block .block-label{color:var(--sg);}
+.block-text{font-size:11px;color:var(--tm);line-height:1.7;}
+
+.foot{text-align:center;font-size:11px;color:var(--tmu);padding-top:.85rem;border-top:.5px solid rgba(180,150,120,.2);line-height:2;margin-top:1.5rem;}
+
+@media print{body{background:white;padding:0;} .wrap{border-radius:0;max-width:100%;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-tag">集團內訓課程提案</div>
+    <div class="header-title">社群影音課程 2026<br>Social Media & Content Training</div>
+    <div class="header-sub">協助集團內部人員建立社群與內容專業知識，打造共同成長的內部學習環境</div>
+  </div>
+
+  <div class="purpose">
+    <div class="purpose-label">課程目的</div>
+    <div class="purpose-text">透過系統性的三階段課程，讓人員從社群概念到內容產出，再到 AI 工具應用，循序建立完整的數位內容能力，並能與他人共享討論，達到組織內部的知識擴散與共同成長。</div>
+  </div>
+
+  <div class="overview">
+    <div class="ov-card">
+      <div class="ov-num">3</div>
+      <div class="ov-label">課程階段</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-num">6</div>
+      <div class="ov-label">核心主題</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-num">3</div>
+      <div class="ov-label">回家作業</div>
+    </div>
+  </div>
+
+  <div class="sec-label">課程階段說明</div>
+
+  <div class="class-card c1">
+    <div class="class-header">
+      <div class="class-num">01</div>
+      <div>
+        <div class="class-title">社群與品牌的基礎認識</div>
+        <div class="class-desc">適合對社群經營概念尚無或模糊的學員，建立基本背景認知</div>
+      </div>
+      <div class="class-tag">概念建立</div>
+    </div>
+    <div class="class-body">
+      <div class="topics-grid">
+        <div class="topic-block">
+          <div class="topic-title">社群是什麼</div>
+          <ul class="topic-items">
+            <li class="topic-item"><span class="dot"></span>社群的本質與定義</li>
+            <li class="topic-item"><span class="dot"></span>社群的功能與角色</li>
+            <li class="topic-item"><span class="dot"></span>社群的運作邏輯</li>
+          </ul>
+        </div>
+        <div class="topic-block">
+          <div class="topic-title">品牌是什麼</div>
+          <ul class="topic-items">
+            <li class="topic-item"><span class="dot"></span>品牌的本質與意義</li>
+            <li class="topic-item"><span class="dot"></span>個人品牌形成的過程</li>
+            <li class="topic-item"><span class="dot"></span>建構你的品牌 DNA</li>
+          </ul>
+        </div>
+      </div>
+      <div class="bottom-row">
+        <div class="hw-block">
+          <div class="block-label">回家作業</div>
+          <div class="block-text">完成個人品牌 DNA 表單，寫下自己的核心定位、服務對象與品牌個性關鍵字</div>
+        </div>
+        <div class="eval-block">
+          <div class="block-label">評估方式</div>
+          <div class="block-text">課堂分享品牌 DNA，由講師與學員共同給予回饋，確認定位清晰度</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="class-card c2">
+    <div class="class-header">
+      <div class="class-num">02</div>
+      <div>
+        <div class="class-title">內容產出的邏輯與方法</div>
+        <div class="class-desc">已有社群背景，需要理解內容產生原理與必備元素的學員</div>
+      </div>
+      <div class="class-tag">內容實作</div>
+    </div>
+    <div class="class-body">
+      <div class="topics-grid">
+        <div class="topic-block">
+          <div class="topic-title">內容是什麼</div>
+          <ul class="topic-items">
+            <li class="topic-item"><span class="dot"></span>內容的種類與功能</li>
+            <li class="topic-item"><span class="dot"></span>什麼該做、什麼不該做</li>
+          </ul>
+        </div>
+        <div class="topic-block">
+          <div class="topic-title">社群內容怎麼做</div>
+          <ul class="topic-items">
+            <li class="topic-item"><span class="dot"></span>內容產出的底層邏輯</li>
+            <li class="topic-item"><span class="dot"></span>建構你的品牌內容框架</li>
+          </ul>
+        </div>
+      </div>
+      <div class="bottom-row">
+        <div class="hw-block">
+          <div class="block-label">回家作業</div>
+          <div class="block-text">依據品牌 DNA，規劃一個月的內容主題清單，至少列出 4 個內容方向並說明原因</div>
+        </div>
+        <div class="eval-block">
+          <div class="block-label">評估方式</div>
+          <div class="block-text">檢視內容主題是否符合品牌定位，並確認學員能說明每個內容背後的策略邏輯</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="class-card c3">
+    <div class="class-header">
+      <div class="class-num">03</div>
+      <div>
+        <div class="class-title">AI 工具應用與大量產出</div>
+        <div class="class-desc">已有基礎產出能力，透過 AI 協助系統化、大量生產內容的學員</div>
+      </div>
+      <div class="class-tag">工具進階</div>
+    </div>
+    <div class="class-body">
+      <div class="topics-grid">
+        <div class="topic-block">
+          <div class="topic-title">AI 是什麼</div>
+          <ul class="topic-items">
+            <li class="topic-item"><span class="dot"></span>AI 的本質與應用範圍</li>
+            <li class="topic-item"><span class="dot"></span>各種 AI 工具的功能介紹</li>
+            <li class="topic-item"><span class="dot"></span>指令思考方式（Prompt）</li>
+          </ul>
+        </div>
+        <div class="topic-block">
+          <div class="topic-title">實作應用</div>
+          <ul class="topic-items">
+            <li class="topic-item"><span class="dot"></span>建構專屬生成圖文 APP</li>
+            <li class="topic-item"><span class="dot"></span>整合品牌風格與 AI 輸出</li>
+            <li class="topic-item"><span class="dot"></span>建立可重複使用的內容流程</li>
+          </ul>
+        </div>
+      </div>
+      <div class="bottom-row">
+        <div class="hw-block">
+          <div class="block-label">回家作業</div>
+          <div class="block-text">使用課堂建立的 AI APP，實際產出 3 則社群圖文內容，並附上使用的指令說明</div>
+        </div>
+        <div class="eval-block">
+          <div class="block-label">評估方式</div>
+          <div class="block-text">確認產出內容是否符合品牌風格，並評估學員能否獨立操作 AI 工具進行內容迭代</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">社群影音課程 2026 · 集團內訓提案<br>課程設計以循序漸進為原則，每堂課建立於前一堂的基礎之上</div>
+</div>
+</body>
+</html>
